@@ -21,6 +21,7 @@ SECTIONS = {
     "decisions": "결정기록",
     "templates": "템플릿",
     "projects": "프로젝트",
+    "worklog": "작업로그",
 }
 
 

@@ -177,8 +177,9 @@ fetch('content.json?t='+Date.now()).then(r=>r.json()).then(d=>{
   ].map(([v,l])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
 
   const tabs=[['home','대시보드'],['guides','가이드'],['lessons','오답노트'],
-              ['decisions','결정기록'],['templates','템플릿'],
-              ['projects','프로젝트'],['check','새 앱 체크리스트']];
+              ['decisions','결정기록'],['worklog','작업로그'],
+              ['templates','템플릿'],['projects','프로젝트'],
+              ['check','새 앱 체크리스트']];
   const nav=document.getElementById('tabs');
   tabs.forEach(([k,label])=>{
     const b=document.createElement('button');
@@ -229,6 +230,7 @@ function render(){
           <em>신호</em>${esc(x.s)}</div>`).join('')
          :'<div class="empty">아직 축적된 신호가 없습니다. 오답노트에 <b>신호</b> 줄을 적으면 여기 모입니다.</div>'}
       </div>
+      ${cards(DATA.docs.filter(d=>d.section==='worklog').slice(-2).reverse())}
       ${cards(DATA.docs.filter(d=>d.section==='projects'||d.section==='root'))}`;
     bind(); return;
   }

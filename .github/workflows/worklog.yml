@@ -1,0 +1,64 @@
+name: worklog
+
+on:
+  schedule:
+    - cron: "0 14 * * *"   # 매일 23:00 KST — 하루 작업이 끝난 뒤
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "특정 일자 (YYYY-MM-DD, 비우면 오늘)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: worklog
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate worklog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_DATE: ${{ inputs.date }}
+          TZ: "Asia/Seoul"
+        run: |
+          set -euo pipefail
+          if [[ -n "${TARGET_DATE}" && ! "${TARGET_DATE}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            echo "::error::date 입력 형식 오류 (YYYY-MM-DD)"
+            exit 1
+          fi
+          python worklog.py "${TARGET_DATE}"
+          python build_site.py
+
+      - name: Commit
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add worklog/ docs/content.json
+          if git diff --cached --quiet; then echo "변경 없음 - 커밋 생략"; exit 0; fi
+          git commit -m "docs: 작업 로그 갱신"
+          for i in 1 2 3; do
+            if git push; then exit 0; fi
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+            sleep $((i * 5))
+          done
+          echo "::error::3회 시도 후에도 푸시 실패"; exit 1
