@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#eceef1">
+<title>앱 개발 플레이북</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<style>
+  :root{
+    --paper:#eceef1; --card:#fff; --ink:#1a1f26; --dim:#68737f; --line:#d3d9df;
+    --signal:#a85c07;      /* 신호 — 이 저장소의 핵심 단위 */
+    --done:#0f6e63;
+    --warn:#a8324a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:'IBM Plex Sans KR',system-ui,sans-serif;line-height:1.7}
+  .wrap{max-width:960px;margin:0 auto;padding:26px 18px 90px}
+
+  header{margin-bottom:22px}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:-.03em;
+     font-size:clamp(24px,5vw,36px);margin:0 0 4px;line-height:1.05}
+  .stamp{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);
+     text-transform:uppercase;letter-spacing:.12em}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:18px 0 20px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:11px 12px}
+  .stat b{display:block;font-family:'Space Grotesk',sans-serif;font-size:22px;
+    line-height:1.1}
+  .stat span{font-size:10.5px;color:var(--dim);letter-spacing:.03em}
+
+  .search{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;
+    background:var(--card);font-size:15px;font-family:inherit;color:var(--ink)}
+  .search:focus{outline:none;border-color:var(--ink)}
+
+  nav{display:flex;gap:6px;overflow-x:auto;margin:14px 0 18px;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{flex:none;padding:7px 14px;border-radius:999px;border:1px solid var(--line);
+    background:var(--card);color:var(--dim);font-size:13.5px;cursor:pointer;
+    font-family:inherit}
+  .tab.on{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:600}
+
+  /* 시그니처: 신호 카드 — 이 저장소에서 가장 자주 다시 읽는 한 줄 */
+  .signals{display:grid;gap:9px;margin-bottom:24px}
+  .sig{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--signal);
+    border-radius:0 9px 9px 0;padding:12px 15px;font-size:14.5px}
+  .sig em{display:block;font-style:normal;font-family:'IBM Plex Mono',monospace;
+    font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--signal);
+    margin-bottom:4px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:11px;
+    padding:15px 17px;margin-bottom:9px;cursor:pointer}
+  .card:hover{border-color:var(--dim)}
+  .card h3{margin:0 0 3px;font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .card .m{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--dim)}
+  .card .h{margin-top:8px;font-size:12.5px;color:var(--dim);line-height:1.5}
+  .badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+    letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px;
+    background:var(--paper);color:var(--dim);margin-right:6px;vertical-align:2px}
+
+  /* 체크리스트 — 진행 상태를 브라우저에 저장한다 */
+  .ck{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:6px 4px}
+  .ck label{display:flex;gap:11px;align-items:flex-start;padding:9px 13px;
+    border-bottom:1px solid var(--line);cursor:pointer;font-size:14.5px}
+  .ck label:last-child{border-bottom:0}
+  .ck input{margin-top:5px;width:17px;height:17px;accent-color:var(--done);flex:none}
+  .ck input:checked + span{color:var(--dim);text-decoration:line-through}
+  .ck h4{margin:16px 13px 4px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+    letter-spacing:.11em;text-transform:uppercase;color:var(--dim)}
+  .reset{margin-top:12px;padding:9px 14px;border:1px solid var(--line);border-radius:8px;
+    background:none;color:var(--dim);font-size:13px;cursor:pointer;font-family:inherit}
+  .prog{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--done);
+    margin-bottom:10px}
+
+  /* 문서 뷰어 */
+  #doc{position:fixed;inset:0;background:var(--paper);overflow-y:auto;display:none;z-index:20}
+  #doc.on{display:block}
+  #doc .inner{max-width:760px;margin:0 auto;padding:20px 18px 90px}
+  #doc .bar{position:sticky;top:0;background:var(--paper);padding:12px 0;
+    border-bottom:1px solid var(--line);margin-bottom:20px;display:flex;
+    justify-content:space-between;align-items:center}
+  #doc button{border:1px solid var(--line);background:var(--card);border-radius:8px;
+    padding:7px 13px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--ink)}
+  #doc h1{font-size:26px;margin:0 0 18px}
+  #doc h2{font-family:'Space Grotesk',sans-serif;font-size:17px;margin:30px 0 8px;
+    padding-top:14px;border-top:1px solid var(--line)}
+  #doc h3{font-size:15px;margin:20px 0 6px}
+  #doc p,#doc li{font-size:15px}
+  #doc code{background:#e2e6ea;padding:1px 5px;border-radius:4px;
+    font-family:'IBM Plex Mono',monospace;font-size:13px}
+  #doc pre{background:var(--ink);color:#e6ebf0;padding:14px;border-radius:9px;
+    overflow-x:auto;font-size:12.5px;line-height:1.55}
+  #doc pre code{background:none;color:inherit;padding:0}
+  #doc table{width:100%;border-collapse:collapse;font-size:13.5px;margin:12px 0}
+  #doc th,#doc td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--line);
+    vertical-align:top}
+  #doc th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim)}
+  #doc blockquote{border-left:3px solid var(--signal);margin:12px 0;padding:2px 14px;
+    color:var(--dim)}
+  .empty{color:var(--dim);font-size:14px;padding:26px 4px}
+  footer{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);
+    font-size:11px;color:var(--dim);font-family:'IBM Plex Mono',monospace}
+  @media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>앱 개발 플레이북</h1>
+    <div class="stamp" id="stamp">불러오는 중</div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+  <input class="search" id="q" placeholder="전체 문서 검색 — 증상, 오류 메시지, 키워드">
+  <nav id="tabs"></nav>
+  <div id="view"></div>
+
+  <footer id="foot"></footer>
+</div>
+
+<div id="doc"><div class="inner">
+  <div class="bar"><button id="back">← 목록</button><span class="stamp" id="dpath"></span></div>
+  <div id="dbody"></div>
+</div></div>
+
+<script>
+const RAW='https://raw.githubusercontent.com/jinhae8971/app-dev-playbook/main/';
+let DATA=null, tab='home', q='';
+
+const CHECKLIST={
+  "시작 전":[
+    "만들 것을 한 문장으로 적었다",
+    "개발자 계정 신원 인증을 시작했다 (수일 걸린다 — 가장 먼저)",
+    "비슷한 앱이 이미 있는지 확인했다"
+  ],
+  "만들기":[
+    "폰에 설치해서 실제로 써봤다",
+    "오프라인에서 앱이 죽지 않는다",
+    "targetSdk가 현재 Play 요건을 만족한다",
+    "실기기에서 상단·하단 UI가 시스템바에 가리지 않는다"
+  ],
+  "배포 준비":[
+    "키스토어를 두 곳 이상에 백업했다",
+    "비밀번호·토큰이 코드나 기본값에 없다",
+    "개인정보처리방침을 URL로 호스팅했다",
+    "스크린샷이 현재 화면과 일치한다"
+  ],
+  "스토어":[
+    "AAB로 빌드했다 (APK는 업로드 불가)",
+    "Play 앱 서명에 동의했다",
+    "데이터 보안·콘텐츠 등급 설문을 실제 기능대로 답했다",
+    "테스터를 15~20명 확보했다 (12명 딱 맞추면 이탈에 깨진다)",
+    "테스터가 '참여 선택'까지 완료했는지 확인했다"
+  ],
+  "출시 후":[
+    "새로 겪은 함정을 오답노트에 적었다",
+    "되돌릴 수 있는 결정은 ADR로 남겼다",
+    "프로젝트 대장에 한 줄 회고를 남겼다"
+  ]
+};
+
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+fetch('content.json?t='+Date.now()).then(r=>r.json()).then(d=>{
+  DATA=d;
+  document.getElementById('stamp').textContent=
+    `최종 빌드 ${d.built_at.slice(0,10)} · 문서 ${d.stats.docs}건`;
+  const s=d.stats;
+  document.getElementById('stats').innerHTML=[
+    [s.signals,'축적된 신호'],[s.lessons,'오답노트'],
+    [s.decisions,'결정기록'],[s.docs,'문서']
+  ].map(([v,l])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+
+  const tabs=[['home','대시보드'],['guides','가이드'],['lessons','오답노트'],
+              ['decisions','결정기록'],['templates','템플릿'],
+              ['projects','프로젝트'],['check','새 앱 체크리스트']];
+  const nav=document.getElementById('tabs');
+  tabs.forEach(([k,label])=>{
+    const b=document.createElement('button');
+    b.className='tab'+(k===tab?' on':''); b.textContent=label;
+    b.onclick=()=>{tab=k;[...nav.children].forEach(c=>c.classList.remove('on'));
+      b.classList.add('on');render();};
+    nav.appendChild(b);
+  });
+  document.getElementById('foot').textContent=
+    `겪은 것만 적는다 · 정책·요금은 확인 날짜를 함께 · ${d.built_at}`;
+  render();
+}).catch(()=>{document.getElementById('stamp').textContent=
+  'content.json을 불러오지 못했습니다. build_site.py 실행 후 배포하세요.';});
+
+document.getElementById('q').addEventListener('input',e=>{
+  q=e.target.value.trim(); render();});
+document.getElementById('back').onclick=()=>
+  document.getElementById('doc').classList.remove('on');
+
+function match(d){
+  if(!q) return true;
+  const t=q.toLowerCase();
+  return d.search.toLowerCase().includes(t)||d.title.toLowerCase().includes(t);
+}
+
+function cards(list){
+  if(!list.length) return '<div class="empty">해당하는 문서가 없습니다.</div>';
+  return list.map(d=>`<div class="card" data-p="${d.path}">
+    <h3><span class="badge">${DATA.sections[d.section]||d.section}</span>${esc(d.title)}</h3>
+    ${d.meta?`<div class="m">${esc(d.meta)}</div>`:''}
+    ${d.headings.length?`<div class="h">${d.headings.slice(0,5).map(esc).join(' · ')}</div>`:''}
+  </div>`).join('');
+}
+
+function render(){
+  const v=document.getElementById('view');
+  const docs=DATA.docs.filter(match);
+
+  if(q){ v.innerHTML=cards(docs); bind(); return; }
+
+  if(tab==='check'){ v.innerHTML=checklistHTML(); bindCheck(); return; }
+
+  if(tab==='home'){
+    const sigs=DATA.docs.flatMap(d=>d.signals.map(s=>({s,t:d.title,p:d.path})));
+    v.innerHTML=`
+      <div class="signals">
+        ${sigs.length?sigs.map(x=>`<div class="sig" data-p="${x.p}">
+          <em>신호</em>${esc(x.s)}</div>`).join('')
+         :'<div class="empty">아직 축적된 신호가 없습니다. 오답노트에 <b>신호</b> 줄을 적으면 여기 모입니다.</div>'}
+      </div>
+      ${cards(DATA.docs.filter(d=>d.section==='projects'||d.section==='root'))}`;
+    bind(); return;
+  }
+
+  v.innerHTML=cards(docs.filter(d=>d.section===tab));
+  bind();
+}
+
+function bind(){
+  document.querySelectorAll('[data-p]').forEach(el=>
+    el.onclick=()=>open(el.dataset.p));
+}
+
+function open(path){
+  const d=DATA.docs.find(x=>x.path===path);
+  if(!d) return;
+  document.getElementById('dpath').textContent=path;
+  document.getElementById('dbody').innerHTML=
+    `<h1>${esc(d.title)}</h1>`+marked.parse(d.body);
+  document.getElementById('doc').classList.add('on');
+  document.getElementById('doc').scrollTop=0;
+}
+
+/* 체크리스트 상태는 브라우저에 남긴다 — 앱을 여러 개 만들며 이어서 쓰는 용도 */
+function checklistHTML(){
+  const saved=load();
+  const total=Object.values(CHECKLIST).flat().length;
+  const done=Object.keys(saved).filter(k=>saved[k]).length;
+  let html=`<div class="prog">${done} / ${total} 완료</div><div class="ck">`;
+  for(const [group,items] of Object.entries(CHECKLIST)){
+    html+=`<h4>${group}</h4>`;
+    items.forEach(it=>{
+      const id='ck_'+btoa(unescape(encodeURIComponent(it))).slice(0,24);
+      html+=`<label><input type="checkbox" data-k="${id}"
+        ${saved[id]?'checked':''}><span>${esc(it)}</span></label>`;
+    });
+  }
+  return html+`</div><button class="reset" id="reset">새 앱 시작 — 전체 초기화</button>`;
+}
+function load(){
+  try{ return JSON.parse(localStorage.getItem('playbook_check')||'{}'); }
+  catch(e){ return {}; }
+}
+function bindCheck(){
+  document.querySelectorAll('.ck input').forEach(el=>{
+    el.onchange=()=>{
+      const s=load(); s[el.dataset.k]=el.checked;
+      localStorage.setItem('playbook_check',JSON.stringify(s));
+      render();
+    };
+  });
+  const r=document.getElementById('reset');
+  if(r) r.onclick=()=>{
+    if(confirm('체크 상태를 모두 지우고 새 앱을 시작할까요?')){
+      localStorage.removeItem('playbook_check'); render();
+    }
+  };
+}
+</script>
+</body>
+</html>
