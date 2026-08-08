@@ -22,9 +22,31 @@ import re
 import sys
 import urllib.request
 
+ROOT = os.path.dirname(os.path.abspath(__file__))
+OUT_DIR = os.path.join(ROOT, "worklog")
+REGISTRY = os.path.join(ROOT, "projects", "registry.json")
+
 OWNER = "jinhae8971"
-REPOS = ["market-heatmap", "app-dev-playbook", "cross-market-flow-radar"]
-OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "worklog")
+
+
+def repos() -> list[tuple[str, str]]:
+    """추적 대상은 앱 대장에서 읽는다.
+
+    코드에 목록을 박아 두면 앱이 늘 때마다 이 파일을 고쳐야 하고,
+    결국 새 앱이 로그에서 빠진다. 대장 한 곳만 고치면 되게 한다.
+    """
+    try:
+        with open(REGISTRY, encoding="utf-8") as f:
+            apps = json.load(f)["apps"]
+    except (OSError, json.JSONDecodeError, KeyError) as exc:
+        print(f"[worklog] 대장 읽기 실패 - 기본값 사용: {exc}")
+        return [("market-heatmap", "market-heatmap")]
+    out = []
+    for a in apps:
+        repo = a.get("repo", "")
+        if "/" in repo:
+            out.append((repo.split("/", 1)[1], a.get("name") or repo))
+    return out
 
 SKIP_PREFIX = ("data:", "chore: 콘텐츠 인덱스", "docs: 콘텐츠 인덱스")
 SKIP_AUTHOR = ("github-actions[bot]",)
@@ -115,7 +137,7 @@ def render(day: dt.date, per_repo: dict[str, list[dict]]) -> str:
 def main() -> None:
     day = (dt.date.fromisoformat(sys.argv[1]) if len(sys.argv) > 1
            else dt.datetime.now(dt.timezone(dt.timedelta(hours=9))).date())
-    per_repo = {r: commits_on(r, day) for r in REPOS}
+    per_repo = {f"{label} ({r})": commits_on(r, day) for r, label in repos()}
 
     os.makedirs(OUT_DIR, exist_ok=True)
     path = os.path.join(OUT_DIR, f"{day}.md")

@@ -1,0 +1,38 @@
+{
+  "_comment": "앱 대장. 새 앱을 만들면 여기에 한 줄 추가한다. worklog.py가 이 파일에서 추적 대상을 읽는다.",
+  "apps": [
+    {
+      "id": "market-heatmap",
+      "name": "마켓 히트맵",
+      "repo": "jinhae8971/market-heatmap",
+      "package": "com.jinhae.heatmap",
+      "pages": "https://jinhae8971.github.io/market-heatmap/",
+      "keystore": "market-heatmap-upload.keystore",
+      "status": "운영",
+      "started": "2026-08",
+      "note": "히트맵·산업·트렌드·센티멘트 4탭. 첫 앱"
+    },
+    {
+      "id": "cross-market-flow-radar",
+      "name": "Cross-Market Flow Radar",
+      "repo": "jinhae8971/cross-market-flow-radar",
+      "package": null,
+      "pages": "https://jinhae8971.github.io/cross-market-flow-radar/",
+      "keystore": null,
+      "status": "운영",
+      "started": "2026-08",
+      "note": "웹 전용. 앱 없음"
+    },
+    {
+      "id": "app-dev-playbook",
+      "name": "앱 개발 플레이북",
+      "repo": "jinhae8971/app-dev-playbook",
+      "package": null,
+      "pages": "https://jinhae8971.github.io/app-dev-playbook/",
+      "keystore": null,
+      "status": "운영",
+      "started": "2026-08",
+      "note": "지식 저장소. 모든 앱의 허브"
+    }
+  ]
+}
